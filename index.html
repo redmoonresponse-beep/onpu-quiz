@@ -7,47 +7,22 @@
 <style>
   body { font-family: sans-serif; background: #f0f0f0; text-align: center; margin: 0; padding: 10px; }
   #app { max-width: 500px; margin: 0 auto; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-  
-  /* スタート画面：ここで音を解禁します */
-  #overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: white; z-index: 100; display: flex; flex-direction: column;
-    justify-content: center; align-items: center;
-  }
-  #start-btn {
-    padding: 20px 40px; font-size: 24px; background: #4CAF50; color: white;
-    border: none; border-radius: 50px; cursor: pointer;
-  }
-
+  #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+  #start-btn { padding: 20px 40px; font-size: 24px; background: #4CAF50; color: white; border: none; border-radius: 50px; cursor: pointer; }
   .stats { margin-bottom: 10px; font-size: 16px; font-weight: bold; }
   .staff-box { background: white; border: 1px solid #ccc; margin-bottom: 20px; padding: 10px; border-radius: 8px; }
-  
-  .piano-container {
-    position: relative; width: 100%; height: 180px; background: #333;
-    padding: 2px; border-radius: 5px; margin-bottom: 20px; display: flex; box-sizing: border-box;
-  }
-  .key-white {
-    flex: 1; background: white; border: 1px solid #333; border-radius: 0 0 5px 5px;
-    cursor: pointer; display: flex; align-items: flex-end; justify-content: center;
-    padding-bottom: 15px; font-size: 13px; font-weight: bold; z-index: 1; -webkit-tap-highlight-color: transparent;
-  }
+  .piano-container { position: relative; width: 100%; height: 180px; background: #333; padding: 2px; border-radius: 5px; margin-bottom: 20px; display: flex; box-sizing: border-box; }
+  .key-white { flex: 1; background: white; border: 1px solid #333; border-radius: 0 0 5px 5px; cursor: pointer; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 15px; font-size: 13px; font-weight: bold; z-index: 1; -webkit-tap-highlight-color: transparent; }
   .key-white:active { background: #ddd; }
-  .key-black {
-    position: absolute; width: 8.5%; height: 60%; background: #000;
-    border: 1px solid #222; border-radius: 0 0 3px 3px; z-index: 2; pointer-events: none;
-  }
-  .next-btn {
-    display: none; width: 100%; padding: 15px; font-size: 18px;
-    background: #2196F3; color: white; border: none; border-radius: 10px; cursor: pointer;
-  }
+  .key-black { position: absolute; width: 8.5%; height: 60%; background: #000; border: 1px solid #222; border-radius: 0 0 3px 3px; z-index: 2; pointer-events: none; }
+  .next-btn { display: none; width: 100%; padding: 15px; font-size: 18px; background: #2196F3; color: white; border: none; border-radius: 10px; cursor: pointer; }
 </style>
 </head>
 <body>
 
 <div id="overlay">
   <h2 style="margin-bottom:20px;">音あてクイズ</h2>
-  <button id="start-btn" onclick="setupAndStart()">はじめる！</button>
-  <p style="margin-top:20px; font-size:12px; color:#666;">※ボタンを押すと音が鳴るようになります</p>
+  <button id="start-btn" onclick="setup()">はじめる！</button>
 </div>
 
 <div id="app">
@@ -65,15 +40,14 @@
   </div>
 
   <div class="piano-container">
-    <div class="key-white" onclick="handleTap('ド')">ド</div>
-    <div class="key-white" onclick="handleTap('レ')">レ</div>
-    <div class="key-white" onclick="handleTap('ミ')">ミ</div>
-    <div class="key-white" onclick="handleTap('ファ')">ファ</div>
-    <div class="key-white" onclick="handleTap('ソ')">ソ</div>
-    <div class="key-white" onclick="handleTap('ラ')">ラ</div>
-    <div class="key-white" onclick="handleTap('シ')">シ</div>
-    <div class="key-white" onclick="handleTap('ド(高)')">ド</div>
-    
+    <div class="key-white" onclick="tap('ド')">ド</div>
+    <div class="key-white" onclick="tap('レ')">レ</div>
+    <div class="key-white" onclick="tap('ミ')">ミ</div>
+    <div class="key-white" onclick="tap('ファ')">ファ</div>
+    <div class="key-white" onclick="tap('ソ')">ソ</div>
+    <div class="key-white" onclick="tap('ラ')">ラ</div>
+    <div class="key-white" onclick="tap('シ')">シ</div>
+    <div class="key-white" onclick="tap('ド(高)')">ド</div>
     <div class="key-black" style="left: 8.5%;"></div>
     <div class="key-black" style="left: 21%;"></div>
     <div class="key-black" style="left: 46%;"></div>
@@ -84,32 +58,19 @@
 </div>
 
 <script>
-const SOUND_FILES = {
+const SOUNDS = {
   "ド": "pi do.wav", "レ": "pi re.wav", "ミ": "pi mi.wav", "ファ": "pi fa.wav",
   "ソ": "pi so.wav", "ラ": "pi ra.wav", "シ": "pi si.wav", "ド(高)": "pi do high.wav"
 };
-const audioElements = {};
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const notes = ["ド", "レ", "ミ", "ファ", "ソ", "ラ", "シ", "ド(高)"];
 const noteY = [78, 73, 68, 63, 58, 53, 48, 43];
-let currentQ = 1;
-let correctCount = 0;
-let targetNote = "";
-let answered = false;
+let currentQ = 1, correctCount = 0, targetNote = "", answered = false;
 
-// 1. ユーザーがボタンを押した瞬間にすべての音をロードする
-function setupAndStart() {
+function setup() {
   document.getElementById('overlay').style.display = 'none';
-  
-  // 各音のAudioオブジェクトを作成して読み込む
-  Object.keys(SOUND_FILES).forEach(name => {
-    const audio = new Audio(encodeURI(SOUND_FILES[name]));
-    audio.load();
-    audioElements[name] = audio;
-  });
-
-  // iOS対策：無音を再生して再生権限を得る
-  const dummy = new Audio();
-  dummy.play().then(() => start()).catch(() => start());
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  start();
 }
 
 function start() {
@@ -117,7 +78,6 @@ function start() {
   document.getElementById('next-btn').style.display = 'none';
   const idx = Math.floor(Math.random() * notes.length);
   targetNote = notes[idx];
-  
   const layer = document.getElementById('note-layer');
   layer.innerHTML = '';
   const y = noteY[idx];
@@ -127,22 +87,29 @@ function start() {
   circle.setAttribute("fill", "#000");
   circle.setAttribute("transform", `rotate(-20, 100, ${y})`);
   layer.appendChild(circle);
-  
   if (idx === 0) {
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
     line.setAttribute("x1", "85"); line.setAttribute("y1", "78");
     line.setAttribute("x2", "115"); line.setAttribute("y2", "78");
-    line.setAttribute("stroke", "#000");
-    layer.appendChild(line);
+    line.setAttribute("stroke", "#000"); layer.appendChild(line);
   }
 }
 
-function handleTap(note) {
-  // すでに用意されたAudioオブジェクトを再生
-  if (audioElements[note]) {
-    audioElements[note].currentTime = 0;
-    audioElements[note].play().catch(e => console.log("Play failed:", e));
-  }
+// 徹底的に音を鳴らす関数
+function tap(note) {
+  const file = SOUNDS[note];
+  
+  // 対策1: 通常再生
+  const a1 = new Audio(file);
+  a1.play().catch(() => {
+    // 対策2: スペースを%20に置換して再生
+    const a2 = new Audio(file.replace(/ /g, '%20'));
+    a2.play().catch(() => {
+      // 対策3: 相対パスを明示して再生
+      const a3 = new Audio("./" + file);
+      a3.play();
+    });
+  });
 
   if (answered) return;
   answered = true;
