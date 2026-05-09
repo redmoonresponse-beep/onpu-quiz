@@ -5,52 +5,37 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>音あてクイズ 🎹</title>
 <style>
-  body { font-family: sans-serif; background: #f0f0f0; text-align: center; margin: 0; padding: 10px; -webkit-user-select: none; }
+  body { font-family: sans-serif; background: #f0f0f0; text-align: center; margin: 0; padding: 10px; }
   #app { max-width: 500px; margin: 0 auto; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+  
+  /* スタート画面のオーバーレイ */
+  #start-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(255,255,255,0.95); z-index: 100;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+  }
+  #start-btn {
+    padding: 20px 40px; font-size: 24px; background: #ff5722; color: white;
+    border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 0 #e64a19;
+  }
+
   .stats { margin-bottom: 10px; font-size: 16px; font-weight: bold; color: #555; }
   .staff-box { background: white; border: 1px solid #ccc; margin-bottom: 20px; padding: 10px; border-radius: 8px; }
   
-  /* 鍵盤エリア */
   .piano-wrap {
-    position: relative;
-    width: 100%;
-    height: 180px;
-    background: #333;
-    padding: 2px;
-    border-radius: 5px;
-    margin-bottom: 20px;
-    display: flex;
-    box-sizing: border-box;
+    position: relative; width: 100%; height: 180px; background: #333;
+    padding: 2px; border-radius: 5px; margin-bottom: 20px; display: flex;
   }
-  
   .key-white {
-    flex: 1;
-    background: white;
-    border: 1px solid #333;
-    border-radius: 0 0 5px 5px;
-    cursor: pointer;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    padding-bottom: 15px;
-    font-size: 13px;
-    font-weight: bold;
-    z-index: 1;
-    -webkit-tap-highlight-color: transparent;
+    flex: 1; background: white; border: 1px solid #333; border-radius: 0 0 5px 5px;
+    cursor: pointer; display: flex; align-items: flex-end; justify-content: center;
+    padding-bottom: 15px; font-size: 13px; font-weight: bold; z-index: 1; -webkit-tap-highlight-color: transparent;
   }
   .key-white:active { background: #e0e0e0; }
-
   .key-black {
-    position: absolute;
-    width: 8.5%;
-    height: 60%;
-    background: #000;
-    border: 1px solid #222;
-    border-radius: 0 0 3px 3px;
-    z-index: 2;
-    pointer-events: none;
+    position: absolute; width: 8.5%; height: 60%; background: #000;
+    border: 1px solid #222; border-radius: 0 0 3px 3px; z-index: 2; pointer-events: none;
   }
-
   .next-btn {
     display: none; width: 100%; padding: 15px; font-size: 18px;
     background: #4CAF50; color: white; border: none; border-radius: 10px; cursor: pointer;
@@ -59,11 +44,13 @@
 </head>
 <body>
 
-<div id="app">
-  <div class="stats">
-    だい <span id="q-num">1</span> / 10 問 | せいかい: <span id="correct-count">0</span>
-  </div>
+<div id="start-overlay">
+  <p style="margin-bottom:20px; font-weight:bold;">おんぷをみて、音をあてよう！</p>
+  <button id="start-btn" onclick="initAudio()">はじめる！ 🎹</button>
+</div>
 
+<div id="app">
+  <div class="stats">だい <span id="q-num">1</span> / 10 問 | せいかい: <span id="correct-count">0</span></div>
   <div class="staff-box">
     <svg viewBox="0 0 200 100" width="100%">
       <line x1="10" y1="30" x2="190" y2="30" stroke="#000" stroke-width="1"/>
@@ -71,7 +58,7 @@
       <line x1="10" y1="50" x2="190" y2="50" stroke="#000" stroke-width="1"/>
       <line x1="10" y1="60" x2="190" y2="60" stroke="#000" stroke-width="1"/>
       <line x1="10" y1="70" x2="190" y2="70" stroke="#000" stroke-width="1"/>
-      <text x="10" y="65" font-size="30" style="pointer-events:none;">𝄞</text>
+      <text x="10" y="65" font-size="30">𝄞</text>
       <g id="note-layer"></g>
     </svg>
   </div>
@@ -85,29 +72,20 @@
     <div class="key-white" onclick="playAndCheck('ラ')">ラ</div>
     <div class="key-white" onclick="playAndCheck('シ')">シ</div>
     <div class="key-white" onclick="playAndCheck('ド(高)')">ド</div>
-    
     <div class="key-black" style="left: 8.5%;"></div>
     <div class="key-black" style="left: 21%;"></div>
     <div class="key-black" style="left: 46%;"></div>
     <div class="key-black" style="left: 58.5%;"></div>
     <div class="key-black" style="left: 71%;"></div>
   </div>
-
   <button id="next-btn" class="next-btn" onclick="nextQuestion()">つぎへ進む ➔</button>
 </div>
 
 <script>
 const SOUNDS = {
-  "ド": "pi do.wav",
-  "レ": "pi re.wav",
-  "ミ": "pi mi.wav",
-  "ファ": "pi fa.wav",
-  "ソ": "pi so.wav",
-  "ラ": "pi ra.wav",
-  "シ": "pi si.wav",
-  "ド(高)": "pi do high.wav"
+  "ド": "pi do.wav", "レ": "pi re.wav", "ミ": "pi mi.wav", "ファ": "pi fa.wav",
+  "ソ": "pi so.wav", "ラ": "pi ra.wav", "シ": "pi si.wav", "ド(高)": "pi do high.wav"
 };
-
 const notes = ["ド", "レ", "ミ", "ファ", "ソ", "ラ", "シ", "ド(高)"];
 const noteY = [78, 73, 68, 63, 58, 53, 48, 43];
 let currentQ = 1;
@@ -115,19 +93,14 @@ let correctCount = 0;
 let targetNote = "";
 let answered = false;
 
-// 音を鳴らすための特別な関数
-function playSound(file) {
-  const audio = new Audio(file);
-  audio.load(); // 事前読み込み
-  const playPromise = audio.play();
-  
-  if (playPromise !== undefined) {
-    playPromise.catch(error => {
-      console.log("再生に失敗しました:", error);
-      // 再試行：エンコードしたURLで試す
-      new Audio(encodeURI(file)).play();
-    });
-  }
+// ブラウザの制限を解除するためのダミー再生
+function initAudio() {
+  document.getElementById('start-overlay').style.display = 'none';
+  // 無音のAudioを一度流して「音が出る状態」にする
+  const audio = new Audio();
+  audio.play().then(() => {
+    start(); // クイズ開始
+  }).catch(() => start());
 }
 
 function start() {
@@ -135,7 +108,6 @@ function start() {
   document.getElementById('next-btn').style.display = 'none';
   const idx = Math.floor(Math.random() * notes.length);
   targetNote = notes[idx];
-  
   const layer = document.getElementById('note-layer');
   layer.innerHTML = '';
   const y = noteY[idx];
@@ -145,23 +117,21 @@ function start() {
   circle.setAttribute("fill", "#000");
   circle.setAttribute("transform", `rotate(-20, 100, ${y})`);
   layer.appendChild(circle);
-  
   if (idx === 0) {
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
     line.setAttribute("x1", "85"); line.setAttribute("y1", "78");
     line.setAttribute("x2", "115"); line.setAttribute("y2", "78");
-    line.setAttribute("stroke", "#000");
-    layer.appendChild(line);
+    line.setAttribute("stroke", "#000"); layer.appendChild(line);
   }
 }
 
 function playAndCheck(note) {
-  // まず音を鳴らす
-  playSound(SOUNDS[note]);
+  // 音を鳴らす（ファイル名にスペースが含まれる場合はエンコードして読み込む）
+  const audio = new Audio(encodeURI(SOUNDS[note]));
+  audio.play().catch(e => console.log("再生エラー:", e));
 
   if (answered) return;
   answered = true;
-  
   if (note === targetNote) {
     correctCount++;
     document.getElementById('correct-count').innerText = correctCount;
@@ -179,8 +149,6 @@ function nextQuestion() {
     start();
   }
 }
-
-start();
 </script>
 </body>
 </html>
