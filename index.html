@@ -10,8 +10,8 @@
   .stats { margin-bottom: 10px; font-size: 16px; font-weight: bold; color: #555; }
   .staff-box { background: white; border: 1px solid #ccc; margin-bottom: 20px; padding: 10px; border-radius: 8px; }
   
-  /* 鍵盤全体のコンテナ */
-  .piano-outer {
+  /* 鍵盤エリア：黒鍵を重ねるための土台 */
+  .piano-wrap {
     position: relative;
     width: 100%;
     height: 180px;
@@ -19,17 +19,10 @@
     padding: 2px;
     border-radius: 5px;
     margin-bottom: 20px;
-    overflow: hidden;
-  }
-
-  .piano-inner {
     display: flex;
-    width: 100%;
-    height: 100%;
-    position: relative;
   }
   
-  /* 白鍵 */
+  /* 白鍵のスタイル */
   .key-white {
     flex: 1;
     background: white;
@@ -42,26 +35,28 @@
     padding-bottom: 15px;
     font-size: 14px;
     font-weight: bold;
-    color: #333;
     z-index: 1;
     -webkit-tap-highlight-color: transparent;
   }
   
-  /* 黒鍵（今は表示のみ） */
+  .key-white:active { background: #e0e0e0; }
+
+  /* 黒鍵のスタイル（表示用） */
   .key-black {
     position: absolute;
-    width: 9%; /* 幅を少し調整 */
+    width: 8.5%;
     height: 60%;
-    background: #000; /* 真っ黒に */
+    background: #000;
     border: 1px solid #333;
     border-radius: 0 0 3px 3px;
     z-index: 2;
-    pointer-events: none;
+    pointer-events: none; /* まだ音は鳴らさない設定 */
   }
 
   .next-btn {
     display: none; width: 100%; padding: 15px; font-size: 18px;
     background: #4CAF50; color: white; border: none; border-radius: 10px; cursor: pointer;
+    margin-top: 10px;
   }
 </style>
 </head>
@@ -84,30 +79,28 @@
     </svg>
   </div>
 
-  <div class="piano-outer">
-    <div class="piano-inner">
-      <div class="key-white" onclick="check('ド')">ド</div>
-      <div class="key-white" onclick="check('レ')">レ</div>
-      <div class="key-white" onclick="check('ミ')">ミ</div>
-      <div class="key-white" onclick="check('ファ')">ファ</div>
-      <div class="key-white" onclick="check('ソ')">ソ</div>
-      <div class="key-white" onclick="check('ラ')">ラ</div>
-      <div class="key-white" onclick="check('シ')">シ</div>
-      <div class="key-white" onclick="check('ド(高)')">ド</div>
-      
-      <div class="key-black" style="left: 8%;"></div>
-      <div class="key-black" style="left: 20.5%;"></div>
-      <div class="key-black" style="left: 45.5%;"></div>
-      <div class="key-black" style="left: 58%;"></div>
-      <div class="key-black" style="left: 70.5%;"></div>
-    </div>
+  <div class="piano-wrap">
+    <div class="key-white" onclick="playAndCheck('ド')">ド</div>
+    <div class="key-white" onclick="playAndCheck('レ')">レ</div>
+    <div class="key-white" onclick="playAndCheck('ミ')">ミ</div>
+    <div class="key-white" onclick="playAndCheck('ファ')">ファ</div>
+    <div class="key-white" onclick="playAndCheck('ソ')">ソ</div>
+    <div class="key-white" onclick="playAndCheck('ラ')">ラ</div>
+    <div class="key-white" onclick="playAndCheck('シ')">シ</div>
+    <div class="key-white" onclick="playAndCheck('ド(高)')">ド</div>
+    
+    <div class="key-black" style="left: 8.5%;"></div>
+    <div class="key-black" style="left: 21%;"></div>
+    <div class="key-black" style="left: 46%;"></div>
+    <div class="key-black" style="left: 58.5%;"></div>
+    <div class="key-black" style="left: 71%;"></div>
   </div>
 
   <button id="next-btn" class="next-btn" onclick="nextQuestion()">つぎへ進む ➔</button>
 </div>
 
 <script>
-// 音声ファイル名（GitHub上の「pi do.wav」等のスペース付き名前に完全対応）
+// 音声ファイル名を配列で管理（スペース付きに対応）
 const SOUNDS = {
   "ド": "pi do.wav",
   "レ": "pi re.wav",
@@ -147,23 +140,17 @@ function start() {
     line.setAttribute("x1", "85"); line.setAttribute("y1", "78");
     line.setAttribute("x2", "115"); line.setAttribute("y2", "78");
     line.setAttribute("stroke", "#000");
-    line.setAttribute("stroke-width", "1");
     layer.appendChild(line);
   }
 }
 
-function check(note) {
+function playAndCheck(note) {
+  // 音を鳴らす（クリックされたら即実行）
+  const audio = new Audio(SOUNDS[note]);
+  audio.play().catch(err => console.log("再生エラー:", err));
+
   if (answered) return;
-
-  // 再生処理をシンプルにしてエラーを回避
-  const audio = new Audio();
-  audio.src = SOUNDS[note];
-  audio.play().catch(e => {
-    console.error("再生失敗:", e);
-    // スペースをエンコードした形式でも試行
-    new Audio(SOUNDS[note].replace(/ /g, '%20')).play();
-  });
-
+  
   answered = true;
   if (note === targetNote) {
     correctCount++;
@@ -183,6 +170,7 @@ function nextQuestion() {
   }
 }
 
+// 起動
 start();
 </script>
 </body>
