@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>音あてクイズ 🎹</title>
 <style>
-  body { font-family: sans-serif; background: #f0f0f0; text-align: center; margin: 0; padding: 10px; }
+  body { font-family: sans-serif; background: #f0f0f0; text-align: center; margin: 0; padding: 10px; -webkit-user-select: none; }
   #app { max-width: 500px; margin: 0 auto; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
   .stats { margin-bottom: 10px; font-size: 16px; font-weight: bold; color: #555; }
   .staff-box { background: white; border: 1px solid #ccc; margin-bottom: 20px; padding: 10px; border-radius: 8px; }
   
-  /* 鍵盤エリア：黒鍵を重ねるための土台 */
+  /* 鍵盤エリア */
   .piano-wrap {
     position: relative;
     width: 100%;
@@ -20,9 +20,9 @@
     border-radius: 5px;
     margin-bottom: 20px;
     display: flex;
+    box-sizing: border-box;
   }
   
-  /* 白鍵のスタイル */
   .key-white {
     flex: 1;
     background: white;
@@ -33,30 +33,27 @@
     align-items: flex-end;
     justify-content: center;
     padding-bottom: 15px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
     z-index: 1;
     -webkit-tap-highlight-color: transparent;
   }
-  
   .key-white:active { background: #e0e0e0; }
 
-  /* 黒鍵のスタイル（表示用） */
   .key-black {
     position: absolute;
     width: 8.5%;
     height: 60%;
     background: #000;
-    border: 1px solid #333;
+    border: 1px solid #222;
     border-radius: 0 0 3px 3px;
     z-index: 2;
-    pointer-events: none; /* まだ音は鳴らさない設定 */
+    pointer-events: none;
   }
 
   .next-btn {
     display: none; width: 100%; padding: 15px; font-size: 18px;
     background: #4CAF50; color: white; border: none; border-radius: 10px; cursor: pointer;
-    margin-top: 10px;
   }
 </style>
 </head>
@@ -74,7 +71,7 @@
       <line x1="10" y1="50" x2="190" y2="50" stroke="#000" stroke-width="1"/>
       <line x1="10" y1="60" x2="190" y2="60" stroke="#000" stroke-width="1"/>
       <line x1="10" y1="70" x2="190" y2="70" stroke="#000" stroke-width="1"/>
-      <text x="10" y="65" font-size="30">𝄞</text>
+      <text x="10" y="65" font-size="30" style="pointer-events:none;">𝄞</text>
       <g id="note-layer"></g>
     </svg>
   </div>
@@ -100,7 +97,6 @@
 </div>
 
 <script>
-// 音声ファイル名を配列で管理（スペース付きに対応）
 const SOUNDS = {
   "ド": "pi do.wav",
   "レ": "pi re.wav",
@@ -118,6 +114,21 @@ let currentQ = 1;
 let correctCount = 0;
 let targetNote = "";
 let answered = false;
+
+// 音を鳴らすための特別な関数
+function playSound(file) {
+  const audio = new Audio(file);
+  audio.load(); // 事前読み込み
+  const playPromise = audio.play();
+  
+  if (playPromise !== undefined) {
+    playPromise.catch(error => {
+      console.log("再生に失敗しました:", error);
+      // 再試行：エンコードしたURLで試す
+      new Audio(encodeURI(file)).play();
+    });
+  }
+}
 
 function start() {
   answered = false;
@@ -145,13 +156,12 @@ function start() {
 }
 
 function playAndCheck(note) {
-  // 音を鳴らす（クリックされたら即実行）
-  const audio = new Audio(SOUNDS[note]);
-  audio.play().catch(err => console.log("再生エラー:", err));
+  // まず音を鳴らす
+  playSound(SOUNDS[note]);
 
   if (answered) return;
-  
   answered = true;
+  
   if (note === targetNote) {
     correctCount++;
     document.getElementById('correct-count').innerText = correctCount;
@@ -170,7 +180,6 @@ function nextQuestion() {
   }
 }
 
-// 起動
 start();
 </script>
 </body>
