@@ -5,118 +5,81 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>音あてクイズ 🎹</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{
-  font-family: sans-serif;
-  background:#f5f4ef;
-  display:flex;
-  justify-content:center;
-  padding: 10px;
-}
-#app{ width:100%; max-width: 600px; }
+  body { font-family: sans-serif; background: #f0f0f0; text-align: center; margin: 0; padding: 20px; }
+  #app { max-width: 500px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+  
+  /* 譜面エリア */
+  .staff-box { background: white; border: 1px solid #ccc; margin-bottom: 20px; padding: 10px; }
+  
+  /* 鍵盤エリア - ここが確実に表示されるようにしました */
+  .piano {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    height: 150px;
+    margin-bottom: 20px;
+    background: #333;
+    padding: 5px;
+    border-radius: 5px;
+  }
+  .key {
+    flex: 1;
+    background: white;
+    border: 1px solid #333;
+    border-radius: 0 0 5px 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    user-select: none;
+  }
+  .key:active { background: #e0e0e0; }
 
-.stats-row{ display:flex; gap:10px; margin-bottom: 10px; }
-.stat{ flex:1; background:#fff; border-radius:10px; padding:8px; text-align:center; border:1px solid #e5e4de; }
-.stat-label{ font-size:12px; color:#999; }
-.stat-value{ font-size:18px; font-weight:bold; }
-
-.staff-card { background:#fff; border:1px solid #e5e4de; border-radius:12px; padding:20px; margin-bottom:15px; text-align:center; }
-#staff-svg { width: 100%; max-width: 400px; height: auto; }
-
-/* 鍵盤エリアの設定 */
-.piano-container {
-  position: relative;
-  width: 100%;
-  height: 180px;
-  background: #fff;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  overflow: hidden;
-  margin-bottom: 20px;
-}
-
-.white-key {
-  position: absolute;
-  top: 0;
-  width: 12.5%; /* 8枚の鍵盤を均等に配置 */
-  height: 100%;
-  background: white;
-  border: 1px solid #ccc;
-  border-radius: 0 0 5px 5px;
-  cursor: pointer;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 10px;
-  font-size: 14px;
-  font-weight: bold;
-  z-index: 1;
-}
-.white-key:active, .white-key.correct { background: #e0f7fa; }
-
-.black-key {
-  position: absolute;
-  top: 0;
-  width: 8%;
-  height: 60%;
-  background: #333;
-  border-radius: 0 0 3px 3px;
-  z-index: 2;
-}
-
-.next-btn {
-  display: none;
-  width: 100%;
-  padding: 15px;
-  background: #4a8c3f;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 18px;
-  cursor: pointer;
-}
-.visible { display: block; }
-
-.result-card { display:none; text-align:center; padding: 40px 20px; background:#fff; border-radius:12px; }
+  .stats { margin-bottom: 10px; font-size: 18px; }
+  .next-btn {
+    display: none; width: 100%; padding: 15px; font-size: 18px;
+    background: #4CAF50; color: white; border: none; border-radius: 10px; cursor: pointer;
+  }
 </style>
 </head>
 <body>
 
 <div id="app">
-  <div id="quiz-section">
-    <div class="stats-row">
-      <div class="stat"><div class="stat-label">問題</div><div class="stat-value" id="q-num">1 / 10</div></div>
-      <div class="stat"><div class="stat-label">正解</div><div class="stat-value" id="correct-count">0</div></div>
-    </div>
-
-    <div class="staff-card">
-      <svg id="staff-svg" viewBox="0 0 200 100">
-        <line x1="10" y1="30" x2="190" y2="30" stroke="#ccc" />
-        <line x1="10" y1="40" x2="190" y2="40" stroke="#ccc" />
-        <line x1="10" y1="50" x2="190" y2="50" stroke="#ccc" />
-        <line x1="10" y1="60" x2="190" y2="60" stroke="#ccc" />
-        <line x1="10" y1="70" x2="190" y2="70" stroke="#ccc" />
-        <text x="15" y="65" font-size="40" fill="#333" font-family="serif">𝄞</text>
-        <g id="note-group"></g>
-      </svg>
-    </div>
-
-    <div class="piano-container" id="piano">
-      </div>
-
-    <button class="next-btn" id="next-btn" onclick="nextQuestion()">つぎへ ➔</button>
+  <div class="stats">
+    だい <span id="q-num">1</span> / 10 問 | せいかい: <span id="correct-count">0</span>
   </div>
 
-  <div class="result-card" id="result-section">
-    <h2>おしまい！</h2>
-    <div style="font-size:48px; margin: 20px 0;" id="result-score">0 / 10</div>
-    <button onclick="location.reload()" style="padding:10px 20px; border-radius:20px;">もういちど遊ぶ</button>
+  <div class="staff-box">
+    <svg viewBox="0 0 200 100" width="100%">
+      <line x1="10" y1="30" x2="190" y2="30" stroke="#000" />
+      <line x1="10" y1="40" x2="190" y2="40" stroke="#000" />
+      <line x1="10" y1="50" x2="190" y2="50" stroke="#000" />
+      <line x1="10" y1="60" x2="190" y2="60" stroke="#000" />
+      <line x1="10" y1="70" x2="190" y2="70" stroke="#000" />
+      <text x="15" y="65" font-size="30">𝄞</text>
+      <g id="note-layer"></g>
+    </svg>
   </div>
+
+  <div class="piano" id="piano-box">
+    <div class="key" onclick="check('ド')">ド</div>
+    <div class="key" onclick="check('レ')">レ</div>
+    <div class="key" onclick="check('ミ')">ミ</div>
+    <div class="key" onclick="check('ファ')">ファ</div>
+    <div class="key" onclick="check('ソ')">ソ</div>
+    <div class="key" onclick="check('ラ')">ラ</div>
+    <div class="key" onclick="check('シ')">シ</div>
+    <div class="key" onclick="check('ド(高)')">ド</div>
+  </div>
+
+  <button id="next-btn" class="next-btn" onclick="nextQuestion()">つぎへ進む ➔</button>
 </div>
 
 <script>
-// 音声ファイル名（GitHubにアップしたものと一致させる）
-const SOUND_FILES = {
+const SOUNDS = {
   "ド": "pi do.wav",
   "レ": "pi re.wav",
   "ミ": "pi mi.wav",
@@ -129,47 +92,67 @@ const SOUND_FILES = {
 
 const notes = ["ド", "レ", "ミ", "ファ", "ソ", "ラ", "シ", "ド(高)"];
 const noteY = [78, 73, 68, 63, 58, 53, 48, 43];
-let currentQ = 0;
+let currentQ = 1;
 let correctCount = 0;
 let targetNote = "";
-let isAnswered = false;
-
-function init() {
-  const piano = document.getElementById('piano');
-  notes.forEach((note, i) => {
-    const key = document.createElement('div');
-    key.className = 'white-key';
-    key.style.left = (i * 12.5) + '%';
-    key.textContent = note;
-    key.onclick = () => check(note);
-    piano.appendChild(key);
-  });
-  
-  // 黒鍵（飾り）
-  [1, 2, 4, 5, 6].forEach(i => {
-    const bk = document.createElement('div');
-    bk.className = 'black-key';
-    bk.style.left = (i * 12.5 - 4) + '%';
-    piano.appendChild(bk);
-  });
-  
-  start();
-}
+let answered = false;
 
 function start() {
-  isAnswered = false;
-  document.getElementById('next-btn').classList.remove('visible');
+  answered = false;
+  document.getElementById('next-btn').style.display = 'none';
   const idx = Math.floor(Math.random() * notes.length);
   targetNote = notes[idx];
   
-  // 譜面の表示
-  const group = document.getElementById('note-group');
-  group.innerHTML = '';
+  const layer = document.getElementById('note-layer');
+  layer.innerHTML = '';
+  
+  // おんぷを書く
   const y = noteY[idx];
-  const el = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
-  el.setAttribute("cx", "100"); el.setAttribute("cy", y);
-  el.setAttribute("rx", "6"); el.setAttribute("ry", "4.5");
-  el.setAttribute("transform", `rotate(-20,100,${y})`);
-  group.appendChild(el);
-  if(idx === 0) { // ドの線
-    const line = document.createElementNS("
+  const circle = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
+  circle.setAttribute("cx", "100"); circle.setAttribute("cy", y);
+  circle.setAttribute("rx", "7"); circle.setAttribute("ry", "5");
+  circle.setAttribute("fill", "#000");
+  circle.setAttribute("transform", `rotate(-20, 100, ${y})`);
+  layer.appendChild(circle);
+  
+  if (idx === 0) { // 下のドの線
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", "85"); line.setAttribute("y1", "78");
+    line.setAttribute("x2", "115"); line.setAttribute("y2", "78");
+    line.setAttribute("stroke", "#000");
+    layer.appendChild(line);
+  }
+}
+
+function check(note) {
+  if (answered) return;
+
+  // 音をならす
+  const audio = new Audio(SOUNDS[note]);
+  audio.play();
+
+  answered = true;
+  if (note === targetNote) {
+    correctCount++;
+    document.getElementById('correct-count').innerText = correctCount;
+  }
+
+  document.getElementById('next-btn').style.display = 'block';
+}
+
+function nextQuestion() {
+  if (currentQ >= 10) {
+    alert("おわり！ " + correctCount + "点だったよ！");
+    location.reload();
+  } else {
+    currentQ++;
+    document.getElementById('q-num').innerText = currentQ;
+    start();
+  }
+}
+
+// さいしょのスタート
+start();
+</script>
+</body>
+</html>
