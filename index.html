@@ -7,22 +7,23 @@
 <style>
   body { font-family: sans-serif; background: #f0f0f0; text-align: center; margin: 0; padding: 10px; }
   #app { max-width: 500px; margin: 0 auto; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-  
   .stats { margin-bottom: 10px; font-size: 16px; font-weight: bold; color: #555; }
-  
   .staff-box { background: white; border: 1px solid #ccc; margin-bottom: 20px; padding: 10px; border-radius: 8px; }
   
-  /* 鍵盤エリア - 直接ボタンを並べる設定 */
-  .piano-group {
-    display: flex;
-    justify-content: center;
+  /* 鍵盤エリア：黒鍵を置くために相対位置(relative)に設定 */
+  .piano-container {
+    position: relative;
     width: 100%;
     height: 180px;
-    margin-bottom: 20px;
-    gap: 2px; /* 鍵盤の隙間 */
+    margin: 0 auto 20px auto;
+    display: flex;
+    background: #333;
+    padding: 2px;
+    border-radius: 5px;
   }
   
-  .key-btn {
+  /* 白鍵 */
+  .key-white {
     flex: 1;
     background: white;
     border: 1px solid #333;
@@ -34,15 +35,18 @@
     padding-bottom: 15px;
     font-size: 14px;
     font-weight: bold;
-    color: #333;
-    -webkit-tap-highlight-color: transparent;
-    box-shadow: 0 3px 0 #ccc;
+    z-index: 1;
   }
   
-  .key-btn:active {
-    background: #e0e0e0;
-    transform: translateY(2px);
-    box-shadow: 0 1px 0 #ccc;
+  /* 黒鍵（飾り） */
+  .key-black {
+    position: absolute;
+    width: 8%;
+    height: 60%;
+    background: #1a1a1a;
+    border-radius: 0 0 3px 3px;
+    z-index: 2;
+    pointer-events: none; /* まだクリックできないようにしておく */
   }
 
   .next-btn {
@@ -70,30 +74,36 @@
     </svg>
   </div>
 
-  <div class="piano-group">
-    <button class="key-btn" onclick="check('ド')">ド</button>
-    <button class="key-btn" onclick="check('レ')">レ</button>
-    <button class="key-btn" onclick="check('ミ')">ミ</button>
-    <button class="key-btn" onclick="check('ファ')">ファ</button>
-    <button class="key-btn" onclick="check('ソ')">ソ</button>
-    <button class="key-btn" onclick="check('ラ')">ラ</button>
-    <button class="key-btn" onclick="check('シ')">シ</button>
-    <button class="key-btn" onclick="check('ド(高)')">ド</button>
+  <div class="piano-container">
+    <div class="key-white" onclick="check('ド')">ド</div>
+    <div class="key-black" style="left: 8.5%;"></div>
+    <div class="key-white" onclick="check('レ')">レ</div>
+    <div class="key-black" style="left: 21%;"></div>
+    <div class="key-white" onclick="check('ミ')">ミ</div>
+    <div class="key-white" onclick="check('ファ')">ファ</div>
+    <div class="key-black" style="left: 46%;"></div>
+    <div class="key-white" onclick="check('ソ')">ソ</div>
+    <div class="key-black" style="left: 58.5%;"></div>
+    <div class="key-white" onclick="check('ラ')')">ラ</div>
+    <div class="key-black" style="left: 71%;"></div>
+    <div class="key-white" onclick="check('シ')">シ</div>
+    <div class="key-white" onclick="check('ド(高)')">ド</div>
   </div>
 
   <button id="next-btn" class="next-btn" onclick="nextQuestion()">つぎへ進む ➔</button>
 </div>
 
 <script>
+// ここが重要：ファイル名を1文字ずつ正確に合わせています
 const SOUNDS = {
-  "ド": "pi do.wav",
-  "レ": "pi re.wav",
-  "ミ": "pi mi.wav",
-  "ファ": "pi fa.wav",
-  "ソ": "pi so.wav",
-  "ラ": "pi ra.wav",
-  "シ": "pi si.wav",
-  "ド(高)": "pi do high.wav"
+  "ド": "pi%20do.wav",
+  "レ": "pi%20re.wav",
+  "ミ": "pi%20mi.wav",
+  "ファ": "pi%20fa.wav",
+  "ソ": "pi%20so.wav",
+  "ラ": "pi%20ra.wav",
+  "シ": "pi%20si.wav",
+  "ド(高)": "pi%20do%20high.wav"
 };
 
 const notes = ["ド", "レ", "ミ", "ファ", "ソ", "ラ", "シ", "ド(高)"];
@@ -111,7 +121,6 @@ function start() {
   
   const layer = document.getElementById('note-layer');
   layer.innerHTML = '';
-  
   const y = noteY[idx];
   const circle = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
   circle.setAttribute("cx", "100"); circle.setAttribute("cy", y);
@@ -131,16 +140,20 @@ function start() {
 
 function check(note) {
   if (answered) return;
-  
+
+  // 音を鳴らす（ファイル名にスペースがある場合の対策済み）
   const audio = new Audio(SOUNDS[note]);
-  audio.play().catch(e => console.log("再生失敗:", e));
+  audio.play().catch(e => {
+    console.error("再生に失敗しました。ファイル名を確認してください:", e);
+    // 予備の再生方法
+    new Audio(note === "ド(高)" ? "pi do high.wav" : "pi " + note.toLowerCase() + ".wav").play();
+  });
 
   answered = true;
   if (note === targetNote) {
     correctCount++;
     document.getElementById('correct-count').innerText = correctCount;
   }
-
   document.getElementById('next-btn').style.display = 'block';
 }
 
