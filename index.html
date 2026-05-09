@@ -23,6 +23,7 @@
 <div id="overlay">
   <h2 style="margin-bottom:20px;">音あてクイズ</h2>
   <button id="start-btn" onclick="setup()">はじめる！</button>
+  <p id="debug-info" style="margin-top:20px; font-size:10px; color:red;"></p>
 </div>
 
 <div id="app">
@@ -58,18 +59,24 @@
 </div>
 
 <script>
+// もし「sounds」フォルダ等に入れている場合は、ここを "sounds/pi do.wav" に書き換えてください
 const SOUNDS = {
-  "ド": "pi do.wav", "レ": "pi re.wav", "ミ": "pi mi.wav", "ファ": "pi fa.wav",
-  "ソ": "pi so.wav", "ラ": "pi ra.wav", "シ": "pi si.wav", "ド(高)": "pi do high.wav"
+  "ド": "pi do.wav", 
+  "レ": "pi re.wav", 
+  "ミ": "pi mi.wav", 
+  "ファ": "pi fa.wav",
+  "ソ": "pi so.wav", 
+  "ラ": "pi ra.wav", 
+  "シ": "pi si.wav", 
+  "ド(高)": "pi do high.wav"
 };
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
 const notes = ["ド", "レ", "ミ", "ファ", "ソ", "ラ", "シ", "ド(高)"];
 const noteY = [78, 73, 68, 63, 58, 53, 48, 43];
 let currentQ = 1, correctCount = 0, targetNote = "", answered = false;
 
 function setup() {
   document.getElementById('overlay').style.display = 'none';
-  if (audioCtx.state === 'suspended') audioCtx.resume();
   start();
 }
 
@@ -95,20 +102,16 @@ function start() {
   }
 }
 
-// 徹底的に音を鳴らす関数
 function tap(note) {
   const file = SOUNDS[note];
+  // 徹底的に再生を試みる
+  const audio = new Audio(encodeURI(file));
   
-  // 対策1: 通常再生
-  const a1 = new Audio(file);
-  a1.play().catch(() => {
-    // 対策2: スペースを%20に置換して再生
-    const a2 = new Audio(file.replace(/ /g, '%20'));
-    a2.play().catch(() => {
-      // 対策3: 相対パスを明示して再生
-      const a3 = new Audio("./" + file);
-      a3.play();
-    });
+  audio.play().catch(e => {
+    const errorMsg = `エラー: ${file} が見つかりません。パスを確認してください。`;
+    console.error(errorMsg, e);
+    // 画面上にエラーを表示させてみる（デバッグ用）
+    alert(errorMsg); 
   });
 
   if (answered) return;
