@@ -5,24 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>音あてクイズ 🎹</title>
 <style>
-  body { font-family: sans-serif; background: #f0f0f0; text-align: center; margin: 0; padding: 20px; }
-  #app { max-width: 500px; margin: 0 auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+  body { font-family: sans-serif; background: #f0f0f0; text-align: center; margin: 0; padding: 10px; }
+  #app { max-width: 500px; margin: 0 auto; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
   
-  /* 譜面エリア */
-  .staff-box { background: white; border: 1px solid #ccc; margin-bottom: 20px; padding: 10px; }
+  .stats { margin-bottom: 10px; font-size: 16px; font-weight: bold; color: #555; }
   
-  /* 鍵盤エリア - ここが確実に表示されるようにしました */
-  .piano {
+  .staff-box { background: white; border: 1px solid #ccc; margin-bottom: 20px; padding: 10px; border-radius: 8px; }
+  
+  /* 鍵盤エリア - 直接ボタンを並べる設定 */
+  .piano-group {
     display: flex;
     justify-content: center;
     width: 100%;
-    height: 150px;
+    height: 180px;
     margin-bottom: 20px;
-    background: #333;
-    padding: 5px;
-    border-radius: 5px;
+    gap: 2px; /* 鍵盤の隙間 */
   }
-  .key {
+  
+  .key-btn {
     flex: 1;
     background: white;
     border: 1px solid #333;
@@ -31,14 +31,20 @@
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    padding-bottom: 10px;
+    padding-bottom: 15px;
     font-size: 14px;
     font-weight: bold;
-    user-select: none;
+    color: #333;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 3px 0 #ccc;
   }
-  .key:active { background: #e0e0e0; }
+  
+  .key-btn:active {
+    background: #e0e0e0;
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #ccc;
+  }
 
-  .stats { margin-bottom: 10px; font-size: 18px; }
   .next-btn {
     display: none; width: 100%; padding: 15px; font-size: 18px;
     background: #4CAF50; color: white; border: none; border-radius: 10px; cursor: pointer;
@@ -54,25 +60,25 @@
 
   <div class="staff-box">
     <svg viewBox="0 0 200 100" width="100%">
-      <line x1="10" y1="30" x2="190" y2="30" stroke="#000" />
-      <line x1="10" y1="40" x2="190" y2="40" stroke="#000" />
-      <line x1="10" y1="50" x2="190" y2="50" stroke="#000" />
-      <line x1="10" y1="60" x2="190" y2="60" stroke="#000" />
-      <line x1="10" y1="70" x2="190" y2="70" stroke="#000" />
-      <text x="15" y="65" font-size="30">𝄞</text>
+      <line x1="10" y1="30" x2="190" y2="30" stroke="#000" stroke-width="0.5"/>
+      <line x1="10" y1="40" x2="190" y2="40" stroke="#000" stroke-width="0.5"/>
+      <line x1="10" y1="50" x2="190" y2="50" stroke="#000" stroke-width="0.5"/>
+      <line x1="10" y1="60" x2="190" y2="60" stroke="#000" stroke-width="0.5"/>
+      <line x1="10" y1="70" x2="190" y2="70" stroke="#000" stroke-width="0.5"/>
+      <text x="10" y="65" font-size="30">𝄞</text>
       <g id="note-layer"></g>
     </svg>
   </div>
 
-  <div class="piano" id="piano-box">
-    <div class="key" onclick="check('ド')">ド</div>
-    <div class="key" onclick="check('レ')">レ</div>
-    <div class="key" onclick="check('ミ')">ミ</div>
-    <div class="key" onclick="check('ファ')">ファ</div>
-    <div class="key" onclick="check('ソ')">ソ</div>
-    <div class="key" onclick="check('ラ')">ラ</div>
-    <div class="key" onclick="check('シ')">シ</div>
-    <div class="key" onclick="check('ド(高)')">ド</div>
+  <div class="piano-group">
+    <button class="key-btn" onclick="check('ド')">ド</button>
+    <button class="key-btn" onclick="check('レ')">レ</button>
+    <button class="key-btn" onclick="check('ミ')">ミ</button>
+    <button class="key-btn" onclick="check('ファ')">ファ</button>
+    <button class="key-btn" onclick="check('ソ')">ソ</button>
+    <button class="key-btn" onclick="check('ラ')">ラ</button>
+    <button class="key-btn" onclick="check('シ')">シ</button>
+    <button class="key-btn" onclick="check('ド(高)')">ド</button>
   </div>
 
   <button id="next-btn" class="next-btn" onclick="nextQuestion()">つぎへ進む ➔</button>
@@ -106,7 +112,6 @@ function start() {
   const layer = document.getElementById('note-layer');
   layer.innerHTML = '';
   
-  // おんぷを書く
   const y = noteY[idx];
   const circle = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
   circle.setAttribute("cx", "100"); circle.setAttribute("cy", y);
@@ -115,7 +120,7 @@ function start() {
   circle.setAttribute("transform", `rotate(-20, 100, ${y})`);
   layer.appendChild(circle);
   
-  if (idx === 0) { // 下のドの線
+  if (idx === 0) {
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
     line.setAttribute("x1", "85"); line.setAttribute("y1", "78");
     line.setAttribute("x2", "115"); line.setAttribute("y2", "78");
@@ -126,10 +131,9 @@ function start() {
 
 function check(note) {
   if (answered) return;
-
-  // 音をならす
+  
   const audio = new Audio(SOUNDS[note]);
-  audio.play();
+  audio.play().catch(e => console.log("再生失敗:", e));
 
   answered = true;
   if (note === targetNote) {
@@ -142,7 +146,7 @@ function check(note) {
 
 function nextQuestion() {
   if (currentQ >= 10) {
-    alert("おわり！ " + correctCount + "点だったよ！");
+    alert("おわり！ " + correctCount + "点でした！");
     location.reload();
   } else {
     currentQ++;
@@ -151,7 +155,6 @@ function nextQuestion() {
   }
 }
 
-// さいしょのスタート
 start();
 </script>
 </body>
